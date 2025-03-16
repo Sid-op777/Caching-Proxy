@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 public class CachingProxy {
 
     private static final Logger logger = LoggerFactory.getLogger(CachingProxy.class);
+    private final int defaultPoolSize = 10;
 
     @Parameter(names = "--port", description = "Port to listen on", required = true)
     private int port;
@@ -37,11 +38,13 @@ public class CachingProxy {
     @Parameter(names = "--clear-cache", description = "Clear the cache")
     private boolean clearCache = false;
 
+    @Parameter(names = "--pool-size" , description = "Set the number of threads in the thread pool (2-3 times the cores available in the system or less)")
+    private int poolSize = defaultPoolSize;
+
     private final Map<String, CachedResponse> cache = new HashMap<>();
 
-    //TODO make pool size a parameter
-    // pool size can be 2-3 times the cores available in the system as a caching proxy is primarily I/O bound
-    private final ExecutorService executor = Executors.newFixedThreadPool(10); // Thread pool for handling requests
+    // Pool size can be 2-3 times the cores available in the system as caching proxy is primarily I/O bound
+    private ExecutorService executor; // Thread pool for handling requests
 
     public static void main(String[] args) throws IOException {
         CachingProxy proxy = new CachingProxy();
@@ -54,6 +57,7 @@ public class CachingProxy {
     }
 
     public void start() throws IOException {
+
         if (clearCache) {
             //TODO dummy implementation
             cache.clear();
@@ -61,12 +65,19 @@ public class CachingProxy {
             return;
         }
 
-        logger.info("Starting caching proxy on port {} forwarding to {}", port, origin);
+        logger.info("Starting caching proxy on port {} forwarding to {} (thread pool size: {})", port, origin, poolSize);
+
+        executor = Executors.newFixedThreadPool(poolSize); // Executor initialised
 
         try (ServerSocket serverSocket = new ServerSocket(port)) {
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 executor.submit(() -> handleClient(clientSocket));
+            }
+        }
+        finally {
+            if (executor != null) {
+                executor.shutdown(); // Shutdown the executor when the server stops
             }
         }
     }
@@ -180,36 +191,4 @@ public class CachingProxy {
         writer.flush();
     }
 
-
-    static class HttpRequest {
-        String uri;
-
-        public HttpRequest(String uri) {
-            this.uri = uri;
-        }
-    }
-
-    static class HttpResponse {
-        int statusCode;
-        Map<String, String> headers;
-        byte[] body;
-
-        public HttpResponse(int statusCode, Map<String, String> headers, byte[] body) {
-            this.statusCode = statusCode;
-            this.headers = headers;
-            this.body = body;
-        }
-    }
-
-    static class CachedResponse {
-        int statusCode;
-        Map<String, String> headers;
-        byte[] body;
-
-        public CachedResponse(int statusCode, Map<String, String> headers, byte[] body) {
-            this.statusCode = statusCode;
-            this.headers = headers;
-            this.body = body;
-        }
-    }
 }

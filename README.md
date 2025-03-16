@@ -2,7 +2,9 @@
 
 This project is a simple caching proxy server built using Java and Maven. It acts as an intermediary between a client and an origin server, caching responses to improve performance and reduce latency.
 
-![Alt text](./caching-proxy-diag.png)
+![Overview](./caching-proxy-diag.png)
+
+For a more detailed diagram - [Detailed Flow](#detailed-flow)
 
 ## Features
 
@@ -93,3 +95,6 @@ The first request to a particular URL will result in an `X-Cache: MISS`, and sub
 *   Thread-safe cache implementation (e.g., using `ConcurrentHashMap`).
 *   Buffering for improved socket performance.
 *   Set parameterized thread pool size
+
+## Detailed Flow
+![Overview](./dtl_wrkfl.svg)
