@@ -1,6 +1,5 @@
 .idea/
-tasks.json
-tcli.bat
+caching-proxy.bat
 
 target/
 !.mvn/wrapper/maven-wrapper.jar

@@ -45,6 +45,7 @@ java -jar target/caching-proxy-1.0-SNAPSHOT-jar-with-dependencies.jar --port <po
 
 *   `<port_number>`:  The port on which the proxy server will listen (e.g., `3000`).
 *   `<origin_url>`: The URL of the origin server to which requests will be forwarded (e.g., `http://dummyjson.com`).
+*   (optional) `<pool_size>`: Set the thread pool size (default-10`). Ideally 2-3 times the cores available in the system or less
 
 **Example:**
 
@@ -53,6 +54,15 @@ java -jar target/caching-proxy-1.0-SNAPSHOT-jar-with-dependencies.jar --port 300
 ```
 
 This starts the proxy server on port 3000, forwarding requests to `http://dummyjson.com`.
+
+
+
+```bash
+java -jar target/caching-proxy-1.0-SNAPSHOT-jar-with-dependencies.jar --port 3000 --origin http://dummyjson.com --port-size 12
+```
+
+This starts the proxy server on port 3000, forwarding requests to `http://dummyjson.com`, with thread pool size 12.
+
 
 
 
@@ -80,6 +90,77 @@ Use the network tab in DevTool to get all the information about the request.
 
 The first request to a particular URL will result in an `X-Cache: MISS`, and subsequent requests to the same URL will result in an `X-Cache: HIT`.
 
+## Creating a Shortcut Script
+
+To simplify execution, you can create a script.
+
+### Windows (Batch File)
+
+1.  Create a file named `caching-proxy.bat` in the project root.
+2.  Add the following content:
+
+    ```bat
+    @echo off
+    cd "%~dp0"
+    java -jar "target/caching-proxy-1.0-SNAPSHOT-jar-with-dependencies.jar" %*
+    ```
+
+3.  Now, you can run the tool with:
+
+    ```
+    caching-proxy --port 3000 --origin http://dummyjson.com
+    ```
+    ```
+    caching-proxy --port 3000 --origin http://dummyjson.com --pool-size 12
+    ```
+
+### Linux/macOS (Shell Script)
+
+1.  Create a file named `caching-proxy` in the project root.
+2.  Add the following content:
+
+    ```sh
+    #!/bin/bash
+    cd "$(dirname "$0")"
+    java -jar "target/caching-proxy-1.0-SNAPSHOT-jar-with-dependencies.jar" "$@"
+    ```
+
+3.  Make the script executable:
+
+    ```
+    chmod +x caching-proxy
+    ```
+
+4.  Now, you can run the tool with:
+
+    ```
+    ./caching-proxy --port 3000 --origin http://dummyjson.com
+    ```
+
+
+### Making It Globally Accessible
+
+To run the tool from any directory:
+
+1.  Add the project directory to the system `PATH`:
+*   On Windows:
+    *   Open *System Properties* -> *Advanced* -> *Environment Variables*.
+    *   Under *System variables*, find `Path` and edit it.
+    *   Add the absolute path of the project root.
+*   On Linux/macOS:
+
+    ```sh
+    echo 'export PATH="$HOME/path-to-project:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
+    ```
+
+2.  Now, you can run the tool from anywhere using:
+
+    ```
+    caching-proxy --port 3000 --origin http://dummyjson.com
+    ```
+
+
 ## Dependencies
 
 *   **Apache HttpClient:**  For making HTTP requests to the origin server.
@@ -94,7 +175,6 @@ The first request to a particular URL will result in an `X-Cache: MISS`, and sub
 *   Configuration via a configuration file.
 *   Thread-safe cache implementation (e.g., using `ConcurrentHashMap`).
 *   Buffering for improved socket performance.
-*   Set parameterized thread pool size
 
 ## Detailed Flow
-![Overview](./dtl_wrkfl.svg)
+![Overview](./dtl_wrkfl_png.png)
